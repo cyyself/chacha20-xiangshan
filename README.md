@@ -155,6 +155,33 @@ void chacha20(chacha_buf *output, const u32 input[16])
 
 我们建议选手在实现了指令集扩展后，通过香山模拟器提供的性能计数器信息（该信息会输出到 xs-emu 的 stderr 输出中，可通过修改 Makefile 中的 `./xs-emu 2> /dev/null` 到 `./xs-emu 2> xs.log`）来分析性能瓶颈，进一步优化指令的排布、寄存器的分配、 Vector lmul 等参数的设置，来进一步提升性能。
 
+## 香山单步调试
+
+香山处理器是乱序多发射处理器，一个cycle可以同时执行多条指令，如果需要了解执行细节，可通过以下方式进行交互式调试：
+
+```bash
+make python-depends  # 下载python版香山（commit号同emu）、下载spike-dasm、安装python依赖
+make python-debug    # 开始debug
+```
+
+如果一切正常，可以看见类似以下输出：
+```
+> chacha20-xiangshan/test.py(26)test_sim_top()
+-> while True:
+(XiangShan)
+```
+
+键入`xui`命令回车进入交互界面进行调试。常用调试命令如下：
+
+1. `xstep <n>` 执行n个时钟周期，例如`xstep 10000`
+1. `xistep [n]` 执行到下1次或者n次指令提交
+1. `xreset` 重置电路
+1. `xload` 加载指定bin文件
+1. `xwatch SimTop_top.SimTop.timer` 观察当前cycle数
+
+其他命令可通过`help`命令查看，部分命令支持tab补齐，例如xload。XSPdb参考链接：[https://github.com/OpenXiangShan/XSPdb](https://github.com/OpenXiangShan/XSPdb)。用户可参考[Pdb手册](https://docs.python.org/3/library/pdb.html)，在`XSPython/XSPdb/xspdb.py`中添加自定义命令。
+
+
 ## 推荐阅读
 
 1. [OpenSSL 中的 ChaCha20 加密算法的 RISC-V Zvbb 汇编实现](https://github.com/openssl/openssl/blob/openssl-3.5.0-beta1/crypto/chacha/asm/chacha-riscv64-v-zbb.pl)
